@@ -822,8 +822,8 @@
         // Replace these two values with your own from supabase.com:
         //   Project Settings → API → Project URL & anon public key
         // ============================================================
-        const SUPABASE_URL = 'https://rnvpsrmhcvnmminrrajh.supabase.co;
-        const SUPABASE_KEY = 'sb_publishable_5nns2Wi3tFuDN-K-T0F5hw_u5Sd0oaP';
+        const SUPABASE_URL = 'https://rnvpsrmhcvnmminrrajh.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnBzcm1oY3ZubW1pbnJyYWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTc0MzcsImV4cCI6MjA5MDY3MzQzN30.8GKWsGvQEt96JZUwJncMFWQqrU59hoazTKBRa-AAHoc';
 
         async function sbFetch(path, options = {}) {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
