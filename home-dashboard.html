@@ -823,17 +823,18 @@
         //   Project Settings → API → Project URL & anon public key
         // ============================================================
         const SUPABASE_URL = 'https://rnvpsrmhcvnmminrrajh.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnBzcm1oY3ZubW1pbnJyYWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTc0MzcsImV4cCI6MjA5MDY3MzQzN30.8GKWsGvQEt96JZUwJncMFWQqrU59hoazTKBRa-AAHoc';
+        const SUPABASE_KEY = 'sb_publishable_5nns2Wi3tFuDN-K-T0F5hw_u5Sd0oaP';
 
         async function sbFetch(path, options = {}) {
+            const { prefer, headers: extraHeaders, ...fetchOptions } = options;
             const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-                ...options,
+                ...fetchOptions,
                 headers: {
                     'apikey': SUPABASE_KEY,
                     'Authorization': `Bearer ${SUPABASE_KEY}`,
                     'Content-Type': 'application/json',
-                    'Prefer': options.prefer || 'return=representation',
-                    ...(options.headers || {})
+                    'Prefer': prefer || 'return=representation',
+                    ...(extraHeaders || {})
                 }
             });
             if (!res.ok && res.status !== 204) {
@@ -1122,13 +1123,11 @@
         
         async function updateManualStock(price) {
             if (price) {
-                await sbFetch('sync_data?name=eq.hlu_price', {
-                    method: 'PATCH',
-                    body: JSON.stringify({ value: JSON.stringify(price) })
-                }).catch(() => sbFetch('sync_data', {
+                await sbFetch('sync_data', {
                     method: 'POST',
+                    prefer: 'resolution=merge-duplicates,return=representation',
                     body: JSON.stringify({ name: 'hlu_price', value: JSON.stringify(price) })
-                }));
+                });
                 updateStocks();
             }
         }
@@ -1248,11 +1247,11 @@
                     
                     // Cache prices in Supabase for fallback
                     const cacheData = { today: todayFormatted, tomorrow: tomorrowFormatted, change: tomorrowChange, timestamp: Date.now() };
-                    sbFetch('sync_data?name=eq.fuel_cache', {
-                        method: 'PATCH', body: JSON.stringify({ value: JSON.stringify(cacheData) })
-                    }).catch(() => sbFetch('sync_data', {
-                        method: 'POST', body: JSON.stringify({ name: 'fuel_cache', value: JSON.stringify(cacheData) })
-                    }));
+                    sbFetch('sync_data', {
+                        method: 'POST',
+                        prefer: 'resolution=merge-duplicates,return=representation',
+                        body: JSON.stringify({ name: 'fuel_cache', value: JSON.stringify(cacheData) })
+                    });
                     
                 } else {
                     throw new Error('Could not parse prices from HTML - found ' + regularPrices.length + ' Regular price mentions');
@@ -1443,15 +1442,11 @@
 
         async function saveTokens(person) {
             const data = { accessToken: tokens[person].accessToken, tokenExpiry: tokens[person].tokenExpiry };
-            await sbFetch(`sync_data?name=eq.outlook_token_${person}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ value: JSON.stringify(data) })
-            }).catch(() =>
-                sbFetch('sync_data', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: `outlook_token_${person}`, value: JSON.stringify(data) })
-                })
-            );
+            await sbFetch('sync_data', {
+                method: 'POST',
+                prefer: 'resolution=merge-duplicates,return=representation',
+                body: JSON.stringify({ name: `outlook_token_${person}`, value: JSON.stringify(data) })
+            });
         }
 
         async function loadTokens(person) {
@@ -1482,15 +1477,11 @@
             }
             
             // Store which person is authenticating in Supabase
-            await sbFetch('sync_data?name=eq.auth_person', {
-                method: 'PATCH',
-                body: JSON.stringify({ value: JSON.stringify(person) })
-            }).catch(() =>
-                sbFetch('sync_data', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: 'auth_person', value: JSON.stringify(person) })
-                })
-            );
+            await sbFetch('sync_data', {
+                method: 'POST',
+                prefer: 'resolution=merge-duplicates,return=representation',
+                body: JSON.stringify({ name: 'auth_person', value: JSON.stringify(person) })
+            });
             
             // OAuth2 implicit flow
             const scope = 'https://graph.microsoft.com/Calendars.Read';
@@ -1774,16 +1765,11 @@
         }
 
         async function saveTodos(person) {
-            // Upsert the entire list for this person as a single JSON blob
-            await sbFetch(`sync_data?name=eq.todos_${person}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ value: JSON.stringify(todos[person]) })
-            }).catch(() =>
-                sbFetch('sync_data', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: `todos_${person}`, value: JSON.stringify(todos[person]) })
-                })
-            );
+            await sbFetch('sync_data', {
+                method: 'POST',
+                prefer: 'resolution=merge-duplicates,return=representation',
+                body: JSON.stringify({ name: `todos_${person}`, value: JSON.stringify(todos[person]) })
+            });
         }
 
         async function loadTodos(person) {
@@ -1839,15 +1825,11 @@
         }
 
         async function saveShoppingList() {
-            await sbFetch('sync_data?name=eq.shopping', {
-                method: 'PATCH',
-                body: JSON.stringify({ value: JSON.stringify(shoppingItems) })
-            }).catch(() =>
-                sbFetch('sync_data', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: 'shopping', value: JSON.stringify(shoppingItems) })
-                })
-            );
+            await sbFetch('sync_data', {
+                method: 'POST',
+                prefer: 'resolution=merge-duplicates,return=representation',
+                body: JSON.stringify({ name: 'shopping', value: JSON.stringify(shoppingItems) })
+            });
         }
 
         async function loadShoppingList() {
@@ -1861,15 +1843,11 @@
         }
 
         async function saveNotes() {
-            await sbFetch('sync_data?name=eq.notes', {
-                method: 'PATCH',
-                body: JSON.stringify({ value: JSON.stringify(notes) })
-            }).catch(() =>
-                sbFetch('sync_data', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: 'notes', value: JSON.stringify(notes) })
-                })
-            );
+            await sbFetch('sync_data', {
+                method: 'POST',
+                prefer: 'resolution=merge-duplicates,return=representation',
+                body: JSON.stringify({ name: 'notes', value: JSON.stringify(notes) })
+            });
         }
 
         async function loadNotes() {
