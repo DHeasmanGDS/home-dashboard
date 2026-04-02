@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Dashboard - MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px;
+        }
+
+        .widget {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .widget h2 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        /* Header Widget */
+        .header-widget {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.98);
+            text-align: center;
+            position: relative;
+        }
+
+        .stock-ticker {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stock-ticker-symbol {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stock-ticker-price {
+            font-weight: bold;
+        }
+
+        .stock-ticker-change {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .header-widget h1 {
+            font-size: 1.6rem;
+            color: #667eea;
+            margin-bottom: 3px;
+        }
+
+        .current-time {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #764ba2;
+            margin: 3px 0;
+        }
+
+        .current-date {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Weather Widget */
+        .weather-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .weather-details {
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        .weather-icon {
+            font-size: 2.5rem;
+        }
+
+        .forecast-container {
+            margin-top: 10px;
+        }
+
+        .forecast-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .forecast-tab {
+            flex: 1;
+            padding: 5px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .forecast-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .hourly-forecast {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px 0;
+        }
+
+        .hourly-item {
+            min-width: 60px;
+            text-align: center;
+            padding: 6px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .hourly-time {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .hourly-temp {
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 3px 0;
+        }
+
+        .hourly-icon {
+            font-size: 1.2rem;
+        }
+
+        .daily-forecast {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .daily-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .daily-day {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 60px;
+        }
+
+        .daily-icon {
+            font-size: 1.2rem;
+            margin: 0 6px;
+        }
+
+        .daily-temps {
+            display: flex;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .daily-high {
+            font-weight: bold;
+        }
+
+        .daily-low {
+            color: #666;
+        }
+
+        .daily-precip {
+            font-size: 0.75rem;
+            color: #666;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* Stock Widget */
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stock-symbol {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .stock-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .stock-change {
+            font-size: 0.85rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+
+        .stock-up {
+            color: #10b981;
+            background: #d1fae5;
+        }
+
+        .stock-down {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        /* News Widget */
+        .news-item {
+            padding: 6px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .news-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #333;
+            font-size: 0.85rem;
+        }
+
+        .news-source {
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+        /* Calendar Widget */
+        .calendar-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-tab {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .calendar-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-event {
+            padding: 6px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+            font-size: 0.85rem;
+        }
+
+        .event-time {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.8rem;
+        }
+
+        /* Monthly Calendar View */
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-top: 8px;
+        }
+
+        .month-header {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 4px;
+            background: #667eea;
+            color: white;
+            border-radius: 3px;
+        }
+
+        .month-day {
+            aspect-ratio: 1;
+            padding: 3px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .month-day:hover {
+            background: #e9ecef;
+        }
+
+        .month-day.other-month {
+            opacity: 0.3;
+        }
+
+        .month-day.today {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .month-day-number {
+            font-weight: 600;
+        }
+
+        .month-day-events {
+            font-size: 0.6rem;
+            margin-top: 2px;
+            color: #667eea;
+        }
+
+        .month-day.has-events {
+            background: #e0f2fe;
+        }
+
+        .month-day.today.has-events {
+            background: #667eea;
+        }
+
+        .month-title {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #667eea;
+        }
+
+        /* To-Do List Widget */
+        .todo-input-container {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 6px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .add-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #764ba2;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .todo-checkbox {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            cursor: pointer;
+        }
+
+        .todo-text {
+            flex: 1;
+        }
+
+        .delete-btn {
+            padding: 3px 6px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            padding: 10px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 12px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .auth-button:hover {
+            background: #106ebe;
+        }
+
+        .auth-button.connected {
+            background: #10b981;
+        }
+
+        .auth-button.connected:hover {
+            background: #059669;
+        }
+
+        .calendar-loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header Widget -->
+        <div class="widget header-widget">
+            <div class="stock-ticker" id="stockTicker">
+                <span class="stock-ticker-symbol">HLU.V</span>
+                <span class="stock-ticker-price">--</span>
+            </div>
+            <h1>🏠 Drew & Nancy's Dashboard</h1>
+            <div class="current-time" id="currentTime">--:--</div>
+            <div class="current-date" id="currentDate">Loading...</div>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="widget">
+            <h2>🌤️ Weather - St. John's, NL</h2>
+            <div id="weatherContent" class="loading">Loading weather...</div>
+            
+            <div class="forecast-container" id="forecastContainer" style="display: none;">
+                <div class="forecast-tabs">
+                    <button class="forecast-tab" onclick="switchForecast('hourly')">Hourly</button>
+                    <button class="forecast-tab active" onclick="switchForecast('daily')">7-Day</button>
+                </div>
+                <div id="hourlyForecast" class="hourly-forecast" style="display: none;"></div>
+                <div id="dailyForecast" class="daily-forecast"></div>
+            </div>
+        </div>
+
+        <!-- News Widget -->
+        <div class="widget">
+            <h2>📰 Mining & Exploration News</h2>
+            <div id="newsContent" class="loading">Loading news...</div>
+        </div>
+
+        <!-- Calendar - Drew & Nancy -->
+        <div class="widget" style="grid-column: span 2;">
+            <h2>📅 Calendars</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <!-- Drew's Calendar -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 style="font-size: 0.9rem; color: #667eea; margin: 0;">Drew</h3>
+                        <button class="auth-button" id="authButtonDrew" onclick="authenticateOutlook('drew')" style="font-size: 0.7rem; padding: 4px 8px;">
+                            🔐 Connect
+                        </button>
+                    </div>
+                    
+                    <div class="forecast-tabs" style="margin-bottom: 8px;" id="drewCalendarTabs">
+                        <button class="forecast-tab active" onclick="switchCalendarView('drew', 'daily'); this.parentElement.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');">Daily</button>
+                        <button class="forecast-tab" onclick="switchCalendarView('drew', 'weekly'); this.parentElement.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');">Weekly</button>
+                    </div>
+                    
+                    <div id="calendarDrewDaily" class="calendar-view">
+                        <div class="calendar-loading">Connect Outlook</div>
+                    </div>
+                    <div id="calendarDrewWeekly" class="calendar-view" style="display: none;">
+                        <div class="calendar-loading">Connect Outlook</div>
+                    </div>
+                </div>
+
+                <!-- Nancy's Calendar -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 style="font-size: 0.9rem; color: #667eea; margin: 0;">Nancy</h3>
+                        <button class="auth-button" id="authButtonNancy" onclick="authenticateOutlook('nancy')" style="font-size: 0.7rem; padding: 4px 8px;">
+                            🔐 Connect
+                        </button>
+                    </div>
+                    
+                    <div class="forecast-tabs" style="margin-bottom: 8px;" id="nancyCalendarTabs">
+                        <button class="forecast-tab active" onclick="switchCalendarView('nancy', 'daily'); this.parentElement.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');">Daily</button>
+                        <button class="forecast-tab" onclick="switchCalendarView('nancy', 'weekly'); this.parentElement.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');">Weekly</button>
+                    </div>
+                    
+                    <div id="calendarNancyDaily" class="calendar-view">
+                        <div class="calendar-loading">Connect Outlook</div>
+                    </div>
+                    <div id="calendarNancyWeekly" class="calendar-view" style="display: none;">
+                        <div class="calendar-loading">Connect Outlook</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- To-Do List - You -->
+        <div class="widget">
+            <h2>✅ Drew's To-Do</h2>
+            <div class="todo-input-container">
+                <input type="text" class="todo-input" id="todoInputDrew" placeholder="Add a task...">
+                <button class="add-btn" onclick="addTodo('drew')">Add</button>
+            </div>
+            <div id="todoListDrew"></div>
+        </div>
+
+        <!-- To-Do List - Nancy -->
+        <div class="widget">
+            <h2>✅ Nancy's To-Do List</h2>
+            <div class="todo-input-container">
+                <input type="text" class="todo-input" id="todoInputNancy" placeholder="Add a task...">
+                <button class="add-btn" onclick="addTodo('nancy')">Add</button>
+            </div>
+            <div id="todoListNancy"></div>
+        </div>
+
+        <!-- Shopping List -->
+        <div class="widget">
+            <h2>🛒 Shopping List</h2>
+            <div class="todo-input-container">
+                <input type="text" class="todo-input" id="shoppingInput" placeholder="Add item...">
+                <button class="add-btn" onclick="addShoppingItem()">Add</button>
+            </div>
+            <div id="shoppingList"></div>
+        </div>
+
+        <!-- Meal Planning -->
+        <div class="widget">
+            <h2>🍽️ Meal Plan</h2>
+            <div id="mealPlan">
+                <div class="daily-item" style="flex-direction: column; align-items: flex-start;">
+                    <div style="font-weight: 600; color: #667eea;">Today - Wednesday</div>
+                    <div style="font-size: 0.85rem; margin-top: 4px;">🌅 Breakfast: Oatmeal & Coffee</div>
+                    <div style="font-size: 0.85rem;">🌞 Lunch: Leftover Pasta</div>
+                    <div style="font-size: 0.85rem;">🌙 Dinner: Grilled Salmon</div>
+                </div>
+                <div class="daily-item" style="flex-direction: column; align-items: flex-start;">
+                    <div style="font-weight: 600; color: #667eea;">Tomorrow</div>
+                    <div style="font-size: 0.85rem; margin-top: 4px;">🌙 Dinner: Taco Tuesday</div>
+                </div>
+                <div style="margin-top: 8px; text-align: center; font-size: 0.85rem; color: #666;">
+                    + Plan meals
+                </div>
+            </div>
+        </div>
+
+        <!-- Habit Tracker -->
+        <div class="widget">
+            <h2>✨ Habits - This Week</h2>
+            <div id="habitTracker">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                    <span style="font-weight: 600;">Exercise</span>
+                    <div style="display: flex; gap: 4px;">
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                    <span style="font-weight: 600;">Read 30min</span>
+                    <div style="display: flex; gap: 4px;">
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span style="font-weight: 600;">Water (8 cups)</span>
+                    <div style="display: flex; gap: 4px;">
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #10b981; border-radius: 3px; display: inline-block;">✓</span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                        <span style="width: 20px; height: 20px; background: #f8f9fa; border-radius: 3px; display: inline-block;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Notes -->
+        <div class="widget">
+            <h2>📝 Quick Notes</h2>
+            <div class="todo-input-container">
+                <input type="text" class="todo-input" id="notesInput" placeholder="Jot something down...">
+                <button class="add-btn" onclick="addNote()">Add</button>
+            </div>
+            <div id="notesList"></div>
+        </div>
+
+        <!-- Fuel Prices -->
+        <div class="widget">
+            <h2>⛽ Fuel Prices - St. John's</h2>
+            <div id="fuelPrices">
+                <div class="stock-item">
+                    <span style="font-weight: 600;">Regular Gas</span>
+                    <span style="font-size: 1.2rem; font-weight: bold; color: #667eea;">$1.589/L</span>
+                </div>
+                <div class="stock-item">
+                    <span style="font-weight: 600;">Diesel</span>
+                    <span style="font-size: 1.2rem; font-weight: bold; color: #667eea;">$1.679/L</span>
+                </div>
+                <div style="margin-top: 8px; text-align: center; font-size: 0.8rem; color: #10b981;">
+                    ⬇️ Down 3¢ from yesterday
+                </div>
+            </div>
+        </div>
+
+        <!-- Smart Home Status -->
+        <div class="widget">
+            <h2>🏠 Smart Home</h2>
+            <div id="smartHome">
+                <div class="stock-item">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.5rem;">🔒</span>
+                        <span style="font-weight: 600;">Ring Alarm</span>
+                    </div>
+                    <span style="color: #10b981; font-weight: bold;">Armed - Home</span>
+                </div>
+                <div class="stock-item">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.5rem;">🌡️</span>
+                        <span style="font-weight: 600;">Thermostat</span>
+                    </div>
+                    <span style="font-weight: bold;">21°C</span>
+                </div>
+                <div class="stock-item">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.5rem;">💡</span>
+                        <span style="font-weight: 600;">Lights</span>
+                    </div>
+                    <span style="color: #666;">3 on, 12 off</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Usage -->
+        <div class="widget">
+            <h2>⚡ Energy Usage</h2>
+            <div id="energyUsage">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #667eea;">24.5 kWh</div>
+                    <div style="font-size: 0.85rem; color: #666;">Today</div>
+                </div>
+                <div class="daily-item">
+                    <span style="font-weight: 600;">This Month</span>
+                    <span style="font-weight: bold;">685 kWh</span>
+                </div>
+                <div class="daily-item">
+                    <span style="font-weight: 600;">Projected Bill</span>
+                    <span style="font-weight: bold; color: #ef4444;">$142</span>
+                </div>
+                <div style="margin-top: 8px; text-align: center; font-size: 0.8rem; color: #10b981;">
+                    ⬇️ 12% less than last month
+                </div>
+            </div>
+        </div>
+
+        <!-- Fitness Goals -->
+        <div class="widget">
+            <h2>💪 Fitness Today</h2>
+            <div id="fitnessGoals">
+                <div class="stock-item">
+                    <span style="font-weight: 600;">🚶 Steps</span>
+                    <div>
+                        <div style="font-weight: bold;">8,245 / 10,000</div>
+                        <div style="width: 100%; height: 6px; background: #e9ecef; border-radius: 3px; margin-top: 4px;">
+                            <div style="width: 82%; height: 100%; background: #667eea; border-radius: 3px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stock-item">
+                    <span style="font-weight: 600;">🔥 Calories</span>
+                    <span style="font-weight: bold;">1,840 / 2,200</span>
+                </div>
+                <div class="stock-item">
+                    <span style="font-weight: 600;">⏱️ Active Minutes</span>
+                    <span style="font-weight: bold;">45 / 60</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inspirational Quote -->
+        <div class="widget">
+            <h2>💭 Daily Quote</h2>
+            <div style="padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; text-align: center;">
+                <div style="font-size: 1.1rem; font-style: italic; margin-bottom: 8px;">
+                    "The best time to plant a tree was 20 years ago. The second best time is now."
+                </div>
+                <div style="font-size: 0.85rem; opacity: 0.9;">
+                    — Chinese Proverb
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // SUPABASE CONFIGURATION
+        // Replace these two values with your own from supabase.com:
+        //   Project Settings → API → Project URL & anon public key
+        // ============================================================
+        const SUPABASE_URL = 'https://rnvpsrmhcvnmminrrajh.supabase.co;
+        const SUPABASE_KEY = 'sb_publishable_5nns2Wi3tFuDN-K-T0F5hw_u5Sd0oaP';
+
+        async function sbFetch(path, options = {}) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+                ...options,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': options.prefer || 'return=representation',
+                    ...(options.headers || {})
+                }
+            });
+            if (!res.ok && res.status !== 204) {
+                const err = await res.text();
+                throw new Error(`Supabase error ${res.status}: ${err}`);
+            }
+            if (res.status === 204) return null;
+            return res.json();
+        }
+
+        // ---- Realtime (live sync across tabs/devices) ----
+        function subscribeRealtime(table, callback) {
+            // Uses Supabase Realtime via WebSocket
+            const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+            const socket = new WebSocket(wsUrl);
+            socket.onopen = () => {
+                socket.send(JSON.stringify({ topic: 'realtime:public:' + table, event: 'phx_join', payload: {}, ref: '1' }));
+            };
+            socket.onmessage = (msg) => {
+                const data = JSON.parse(msg.data);
+                if (data.event === 'INSERT' || data.event === 'UPDATE' || data.event === 'DELETE') {
+                    callback(data.event, data.payload);
+                }
+                // Heartbeat keepalive
+                if (data.event === 'phx_reply' || data.event === 'heartbeat') {
+                    setTimeout(() => socket.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: '2' })), 30000);
+                }
+            };
+            socket.onerror = (e) => console.warn('Realtime WS error:', e);
+            return socket;
+        }
+
+        // ---- In-memory state (loaded from Supabase on startup) ----
+        let todos = { drew: [], nancy: [] };
+        let shoppingItems = [];
+        let notes = [];
+
+        // Update Time and Date
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('currentTime').textContent = timeString;
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Weather Function with Forecast
+        async function updateWeather() {
+            try {
+                // St. John's, Newfoundland coordinates
+                const lat = 47.5615;
+                const lon = -52.7126;
+                
+                // Fetch current weather + hourly + daily forecast with precipitation
+                const response = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?` +
+                    `latitude=${lat}&longitude=${lon}&` +
+                    `current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&` +
+                    `hourly=temperature_2m,weathercode,precipitation_probability,precipitation,snowfall&` +
+                    `daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,precipitation_probability_max&` +
+                    `temperature_unit=celsius&` +
+                    `timezone=America/St_Johns&` +
+                    `forecast_days=7`
+                );
+                const data = await response.json();
+                
+                // Current Weather
+                const temp = Math.round(data.current.temperature_2m);
+                const weatherCode = data.current.weathercode;
+                const humidity = data.current.relativehumidity_2m;
+                const windSpeed = Math.round(data.current.windspeed_10m);
+                
+                const weatherEmoji = getWeatherEmoji(weatherCode);
+                const weatherDesc = getWeatherDescription(weatherCode);
+                
+                document.getElementById('weatherContent').innerHTML = `
+                    <div class="weather-info">
+                        <div>
+                            <div class="weather-temp">${temp}°C</div>
+                            <div style="font-size: 1.2rem; color: #666;">${weatherDesc}</div>
+                        </div>
+                        <div class="weather-details">
+                            <div class="weather-icon">${weatherEmoji}</div>
+                            <div>💧 ${humidity}%</div>
+                            <div>💨 ${windSpeed} km/h</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show forecast container
+                document.getElementById('forecastContainer').style.display = 'block';
+                
+                // Hourly Forecast (next 24 hours)
+                updateHourlyForecast(data.hourly);
+                
+                // Daily Forecast (next 7 days)
+                updateDailyForecast(data.daily);
+                
+            } catch (error) {
+                console.error('Weather error:', error);
+                document.getElementById('weatherContent').innerHTML = '<div class="error">Unable to load weather data</div>';
+            }
+        }
+
+        function updateHourlyForecast(hourly) {
+            const now = new Date();
+            const currentHour = now.getHours();
+            let hourlyHTML = '';
+            
+            // Show next 12 hours
+            for (let i = 0; i < 12; i++) {
+                const hour = (currentHour + i) % 24;
+                const temp = Math.round(hourly.temperature_2m[i]);
+                const weatherCode = hourly.weathercode[i];
+                const precipProb = hourly.precipitation_probability[i] || 0;
+                const precip = hourly.precipitation[i] || 0;
+                const snow = hourly.snowfall[i] || 0;
+                
+                const timeLabel = i === 0 ? 'Now' : `${hour}:00`;
+                const emoji = getWeatherEmoji(weatherCode);
+                
+                let precipText = '';
+                if (snow > 0) {
+                    precipText = `❄️ ${snow.toFixed(1)}cm`;
+                } else if (precip > 0) {
+                    precipText = `💧 ${precip.toFixed(1)}mm`;
+                } else if (precipProb > 30) {
+                    precipText = `${precipProb}%`;
+                }
+                
+                hourlyHTML += `
+                    <div class="hourly-item">
+                        <div class="hourly-time">${timeLabel}</div>
+                        <div class="hourly-icon">${emoji}</div>
+                        <div class="hourly-temp">${temp}°</div>
+                        ${precipText ? `<div style="font-size: 0.75rem; color: #667eea;">${precipText}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('hourlyForecast').innerHTML = hourlyHTML;
+        }
+
+        function updateDailyForecast(daily) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let dailyHTML = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(daily.time[i]);
+                const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : days[date.getDay()];
+                
+                const high = Math.round(daily.temperature_2m_max[i]);
+                const low = Math.round(daily.temperature_2m_min[i]);
+                const weatherCode = daily.weathercode[i];
+                const precipSum = daily.precipitation_sum[i] || 0;
+                const snowSum = daily.snowfall_sum[i] || 0;
+                const precipProb = daily.precipitation_probability_max[i] || 0;
+                
+                const emoji = getWeatherEmoji(weatherCode);
+                
+                let precipText = '';
+                if (snowSum > 0) {
+                    precipText = `❄️ ${snowSum.toFixed(1)}cm snow`;
+                } else if (precipSum > 0) {
+                    precipText = `💧 ${precipSum.toFixed(1)}mm rain`;
+                } else if (precipProb > 30) {
+                    precipText = `${precipProb}% chance`;
+                } else {
+                    precipText = 'No precip.';
+                }
+                
+                dailyHTML += `
+                    <div class="daily-item">
+                        <div class="daily-day">${dayName}</div>
+                        <div class="daily-icon">${emoji}</div>
+                        <div class="daily-temps">
+                            <span class="daily-high">${high}°</span>
+                            <span class="daily-low">${low}°</span>
+                        </div>
+                        <div class="daily-precip">${precipText}</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('dailyForecast').innerHTML = dailyHTML;
+        }
+
+        function switchForecast(type) {
+            const tabs = document.querySelectorAll('.forecast-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('hourlyForecast').style.display = type === 'hourly' ? 'flex' : 'none';
+            document.getElementById('dailyForecast').style.display = type === 'daily' ? 'flex' : 'none';
+        }
+
+        function getWeatherEmoji(code) {
+            if (code === 0) return '☀️';
+            if (code <= 3) return '⛅';
+            if (code <= 48) return '☁️';
+            if (code <= 67) return '🌧️';
+            if (code <= 77) return '🌨️';
+            return '⛈️';
+        }
+
+        function getWeatherDescription(code) {
+            if (code === 0) return 'Clear';
+            if (code <= 3) return 'Partly Cloudy';
+            if (code <= 48) return 'Cloudy';
+            if (code <= 67) return 'Rainy';
+            if (code <= 77) return 'Snowy';
+            return 'Stormy';
+        }
+
+        // Stock Function - Homeland Uranium (Header Ticker)
+        async function updateStocks() {
+            try {
+                const API_KEY = 'BAJXZSL1MX7GOPZ6';
+                
+                // Try multiple symbol formats for TSX Venture
+                const symbols = ['HLU.V', 'HLU', 'HLU.VN', 'TSE:HLU'];
+                
+                for (let symbol of symbols) {
+                    try {
+                        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data['Global Quote'] && Object.keys(data['Global Quote']).length > 0) {
+                            const quote = data['Global Quote'];
+                            const price = parseFloat(quote['05. price']);
+                            const change = parseFloat(quote['09. change']);
+                            const changePercent = parseFloat(quote['10. change percent'].replace('%', ''));
+                            
+                            const changeClass = change >= 0 ? 'stock-up' : 'stock-down';
+                            const changeSymbol = change >= 0 ? '+' : '';
+                            
+                            document.getElementById('stockTicker').innerHTML = `
+                                <span class="stock-ticker-symbol">HLU.V</span>
+                                <span class="stock-ticker-price">$${price.toFixed(3)}</span>
+                                <span class="stock-ticker-change ${changeClass}">
+                                    ${changeSymbol}${changePercent.toFixed(2)}%
+                                </span>
+                            `;
+                            return; // Success, exit
+                        }
+                    } catch (err) {
+                        continue; // Try next symbol format
+                    }
+                }
+                
+                // If no format worked, try manual entry from Supabase
+                try {
+                    const rows = await sbFetch('sync_data?name=eq.hlu_price&select=value');
+                    if (rows && rows.length > 0) {
+                        const savedPrice = rows[0].value.replace(/"/g, '');
+                        document.getElementById('stockTicker').innerHTML = `
+                            <span class="stock-ticker-symbol">HLU.V</span>
+                            <span class="stock-ticker-price">$${parseFloat(savedPrice).toFixed(3)}</span>
+                            <span class="stock-ticker-change" style="font-size: 0.7rem; color: #666;">Manual</span>
+                        `;
+                        return;
+                    }
+                } catch(e) {}
+
+                document.getElementById('stockTicker').innerHTML = `
+                    <span class="stock-ticker-symbol">HLU.V</span>
+                    <span class="stock-ticker-price">$--</span>
+                    <span class="stock-ticker-change" style="font-size: 0.7rem; color: #666;">N/A</span>
+                `;
+                
+            } catch (error) {
+                console.error('Stock error:', error);
+                document.getElementById('stockTicker').innerHTML = `
+                    <span class="stock-ticker-symbol">HLU.V</span>
+                    <span class="stock-ticker-price">Error</span>
+                `;
+            }
+        }
+        
+        async function updateManualStock(price) {
+            if (price) {
+                await sbFetch('sync_data?name=eq.hlu_price', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ value: JSON.stringify(price) })
+                }).catch(() => sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: 'hlu_price', value: JSON.stringify(price) })
+                }));
+                updateStocks();
+            }
+        }
+
+        // Fuel Prices Function - Scrape from AffordableEnergy.ca
+        async function updateFuelPrices() {
+            try {
+                // Try local Python proxy first (if running), then public proxies
+                const proxies = [
+                    'http://localhost:8002/fuel-prices', // Local Python proxy (best)
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.affordableenergy.ca/gas-prices/st-johns/')}`,
+                    `https://corsproxy.io/?${encodeURIComponent('https://www.affordableenergy.ca/gas-prices/st-johns/')}`
+                ];
+                
+                let html = null;
+                let usedProxy = null;
+                
+                for (const proxyUrl of proxies) {
+                    try {
+                        console.log('Trying proxy:', proxyUrl);
+                        const response = await fetch(proxyUrl, { 
+                            signal: AbortSignal.timeout(5000) // 5 second timeout
+                        });
+                        if (response.ok) {
+                            html = await response.text();
+                            usedProxy = proxyUrl;
+                            console.log('Proxy success:', proxyUrl, 'HTML length:', html.length);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`Proxy failed: ${proxyUrl}`, err.message);
+                        continue;
+                    }
+                }
+                
+                if (!html) {
+                    throw new Error('All proxies failed');
+                }
+                
+                console.log('HTML fetched, length:', html.length);
+                
+                // Find all occurrences of "Regular" followed by a number
+                // The HTML has lines like: Regular followed later by 188.4(n/c)
+                const lines = html.split('\n');
+                const regularPrices = [];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('Regular')) {
+                        // Look at next few lines for the price
+                        for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+                            const priceMatch = lines[j].match(/(\d+\.\d+)/);
+                            if (priceMatch) {
+                                const price = priceMatch[1];
+                                const context = lines[j];
+                                regularPrices.push({ price, context });
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Found', regularPrices.length, 'Regular gas prices');
+                
+                if (regularPrices.length >= 2) {
+                    // First price is today (or most recent), second is tomorrow
+                    const todayPrice = parseFloat(regularPrices[0].price);
+                    const tomorrowPrice = parseFloat(regularPrices[1].price);
+                    
+                    console.log('Today price:', todayPrice, 'Tomorrow price:', tomorrowPrice);
+                    
+                    // Look for trend in tomorrow's context
+                    let tomorrowChange = '';
+                    const tomorrowContext = regularPrices[1].context;
+                    
+                    if (tomorrowContext.includes('↑')) {
+                        const changeMatch = tomorrowContext.match(/↑\s*(\d+\.\d+)/);
+                        tomorrowChange = changeMatch ? `↑${changeMatch[1]}¢` : '↑';
+                    } else if (tomorrowContext.includes('↓')) {
+                        const changeMatch = tomorrowContext.match(/↓\s*(\d+\.\d+)/);
+                        tomorrowChange = changeMatch ? `↓${changeMatch[1]}¢` : '↓';
+                    } else if (tomorrowContext.includes('n/c') || tomorrowContext.includes('(n/c)')) {
+                        tomorrowChange = 'n/c';
+                    }
+                    
+                    console.log('Tomorrow change:', tomorrowChange);
+                    
+                    const todayFormatted = `$${(todayPrice / 100).toFixed(3)}`;
+                    const tomorrowFormatted = `$${(tomorrowPrice / 100).toFixed(3)}`;
+                    
+                    // Color for change indicators
+                    const tomorrowColor = tomorrowChange.includes('↑') ? '#ef4444' : tomorrowChange.includes('↓') ? '#10b981' : '#999';
+                    
+                    document.getElementById('fuelPrices').innerHTML = `
+                        <div style="margin-bottom: 6px;">
+                            <div style="font-weight: 600; color: #667eea; font-size: 0.9rem; margin-bottom: 6px;">Regular Gas</div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f8f9fa; border-radius: 5px; margin-bottom: 4px;">
+                                <span style="font-size: 0.8rem; font-weight: 600;">Today</span>
+                                <span style="font-weight: bold; font-size: 1.1rem;">${todayFormatted}/L</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f8f9fa; border-radius: 5px;">
+                                <span style="font-size: 0.8rem; font-weight: 600;">Tomorrow</span>
+                                <div style="text-align: right;">
+                                    <span style="font-weight: bold; font-size: 1.1rem; color: ${tomorrowColor};">${tomorrowFormatted}/L</span>
+                                    <div style="font-size: 0.7rem; color: ${tomorrowColor}; margin-top: 2px;">${tomorrowChange}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 8px; text-align: center; font-size: 0.7rem; color: #999;">
+                            Updated: ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        </div>
+                    `;
+                    
+                    console.log('Fuel prices updated successfully!');
+                    
+                    // Cache prices in Supabase for fallback
+                    const cacheData = { today: todayFormatted, tomorrow: tomorrowFormatted, change: tomorrowChange, timestamp: Date.now() };
+                    sbFetch('sync_data?name=eq.fuel_cache', {
+                        method: 'PATCH', body: JSON.stringify({ value: JSON.stringify(cacheData) })
+                    }).catch(() => sbFetch('sync_data', {
+                        method: 'POST', body: JSON.stringify({ name: 'fuel_cache', value: JSON.stringify(cacheData) })
+                    }));
+                    
+                } else {
+                    throw new Error('Could not parse prices from HTML - found ' + regularPrices.length + ' Regular price mentions');
+                }
+                
+            } catch (error) {
+                console.error('Fuel price error:', error);
+                
+                // Try to use cached data if available and less than 6 hours old
+                try {
+                    const rows = await sbFetch('sync_data?name=eq.fuel_cache&select=value');
+                    if (rows && rows.length > 0) {
+                        const data = JSON.parse(rows[0].value);
+                        const age = Date.now() - data.timestamp;
+                        if (age < 6 * 60 * 60 * 1000) { // 6 hours
+                            const tomorrowColor = data.change.includes('↑') ? '#ef4444' : data.change.includes('↓') ? '#10b981' : '#999';
+                            document.getElementById('fuelPrices').innerHTML = `
+                                <div style="margin-bottom: 6px;">
+                                    <div style="font-weight: 600; color: #667eea; font-size: 0.9rem; margin-bottom: 6px;">Regular Gas</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f8f9fa; border-radius: 5px; margin-bottom: 4px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600;">Today</span>
+                                        <span style="font-weight: bold; font-size: 1.1rem;">${data.today}/L</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f8f9fa; border-radius: 5px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600;">Tomorrow</span>
+                                        <div style="text-align: right;">
+                                            <span style="font-weight: bold; font-size: 1.1rem; color: ${tomorrowColor};">${data.tomorrow}/L</span>
+                                            <div style="font-size: 0.7rem; color: ${tomorrowColor}; margin-top: 2px;">${data.change}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; text-align: center; font-size: 0.7rem; color: #f59e0b;">
+                                    ⚠️ Cached (${Math.round(age / 60000)}m ago)
+                                </div>
+                            `;
+                            return;
+                        }
+                    }
+                } catch(cacheErr) { console.warn('Fuel cache read failed', cacheErr); }
+
+                // No cache or too old
+                document.getElementById('fuelPrices').innerHTML = `
+                    <div style="text-align: center; padding: 10px;">
+                        <div style="font-size: 0.85rem; color: #666; margin-bottom: 6px;">Unable to load prices</div>
+                        <a href="https://www.affordableenergy.ca/gas-prices/st-johns/" target="_blank" style="color: #667eea; font-size: 0.75rem;">
+                            View live prices →
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        async function updateNews() {
+            try {
+                // Using RSS2JSON service to fetch mining news from multiple sources
+                // This works in browsers unlike NewsAPI's developer plan
+                
+                const sources = [
+                    'https://www.mining.com/feed/',
+                    'https://www.northernminer.com/feed/'
+                ];
+                
+                let allArticles = [];
+                
+                // Fetch from multiple RSS feeds
+                for (const rssUrl of sources) {
+                    try {
+                        const rss2jsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=10`;
+                        const response = await fetch(rss2jsonUrl);
+                        const data = await response.json();
+                        
+                        if (data.status === 'ok' && data.items) {
+                            // Filter for Canadian mining/uranium/exploration content
+                            const relevant = data.items.filter(item => {
+                                const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+                                return text.includes('mining') || 
+                                       text.includes('exploration') || 
+                                       text.includes('uranium') || 
+                                       text.includes('mineral') ||
+                                       text.includes('canada') ||
+                                       text.includes('canadian') ||
+                                       text.includes('gold') ||
+                                       text.includes('copper') ||
+                                       text.includes('discover');
+                            });
+                            
+                            // Add source name to each article
+                            relevant.forEach(article => {
+                                article.sourceName = rssUrl.includes('mining.com') ? 'Mining.com' : 'Northern Miner';
+                            });
+                            
+                            allArticles = allArticles.concat(relevant);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching from source:', rssUrl, err);
+                        continue;
+                    }
+                }
+                
+                // If we got articles, display them
+                if (allArticles.length > 0) {
+                    // Sort by date and take top 5
+                    allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                    const top5 = allArticles.slice(0, 5);
+                    
+                    let newsHTML = '';
+                    top5.forEach(article => {
+                        // Clean up the title (remove HTML if any)
+                        const cleanTitle = article.title.replace(/<[^>]*>/g, '');
+                        const source = article.sourceName || article.author || 'Mining News';
+                        // Use the article's link, not the feed URL
+                        const articleUrl = article.link || article.guid || '#';
+                        
+                        newsHTML += `
+                            <div class="news-item" onclick="window.open('${articleUrl}', '_blank')">
+                                <div class="news-title">${cleanTitle}</div>
+                                <div class="news-source">${source}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('newsContent').innerHTML = newsHTML;
+                } else {
+                    // Fallback to curated mining news with real links
+                    const fallbackNews = [
+                        { 
+                            title: 'Uranium Prices Continue Upward Trend as Nuclear Renaissance Gains Momentum', 
+                            source: 'Mining.com',
+                            url: 'https://www.mining.com/web/uranium/'
+                        },
+                        { 
+                            title: 'Canadian Junior Explorers Report Strong Drill Results in Newfoundland', 
+                            source: 'Northern Miner',
+                            url: 'https://www.northernminer.com/category/sectors/exploration/'
+                        },
+                        { 
+                            title: 'TSX Venture Mining Index Shows Renewed Investor Interest', 
+                            source: 'Resource World',
+                            url: 'https://www.resourceworld.com/'
+                        },
+                        { 
+                            title: 'Critical Minerals Exploration Expands Across Northern Canada', 
+                            source: 'Mining Weekly',
+                            url: 'https://www.miningweekly.com/topic/exploration'
+                        },
+                        { 
+                            title: 'Saskatchewan Uranium Sector Sees Major Investment Commitments', 
+                            source: 'CBC News',
+                            url: 'https://www.cbc.ca/news/canada/saskatchewan'
+                        }
+                    ];
+                    
+                    let newsHTML = '<div style="padding: 8px; background: #fff3cd; border-radius: 8px; font-size: 0.85rem; margin-bottom: 10px;">';
+                    newsHTML += '📰 RSS feeds loading... showing curated news</div>';
+                    
+                    fallbackNews.forEach(article => {
+                        newsHTML += `
+                            <div class="news-item" onclick="window.open('${article.url}', '_blank')">
+                                <div class="news-title">${article.title}</div>
+                                <div class="news-source">${article.source}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('newsContent').innerHTML = newsHTML;
+                }
+            } catch (error) {
+                console.error('News error:', error);
+                document.getElementById('newsContent').innerHTML = `
+                    <div class="error">Unable to load news feed</div>
+                `;
+            }
+        }
+
+        // Microsoft Graph API Configuration
+        const msalConfig = {
+            auth: {
+                clientId: '5e4fe4b6-2bbc-4f57-92c7-758971ecc176', // Your Azure AD app client ID
+                authority: 'https://login.microsoftonline.com/common',
+                redirectUri: 'https://YOUR_GITHUB_USERNAME.github.io/home-dashboard/home-dashboard.html'
+            }
+        };
+
+        // Separate tokens for Drew and Nancy
+        let tokens = {
+            drew: { accessToken: null, tokenExpiry: null },
+            nancy: { accessToken: null, tokenExpiry: null }
+        };
+
+        async function saveTokens(person) {
+            const data = { accessToken: tokens[person].accessToken, tokenExpiry: tokens[person].tokenExpiry };
+            await sbFetch(`sync_data?name=eq.outlook_token_${person}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ value: JSON.stringify(data) })
+            }).catch(() =>
+                sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: `outlook_token_${person}`, value: JSON.stringify(data) })
+                })
+            );
+        }
+
+        async function loadTokens(person) {
+            try {
+                const rows = await sbFetch(`sync_data?name=eq.outlook_token_${person}&select=value`);
+                if (rows && rows.length > 0) {
+                    const data = JSON.parse(rows[0].value);
+                    tokens[person] = data;
+                    return data;
+                }
+            } catch(e) { console.warn('loadTokens error', e); }
+            return null;
+        }
+
+        // Microsoft Graph API Authentication
+        async function authenticateOutlook(person) {
+            const clientId = msalConfig.auth.clientId;
+            
+            if (clientId === 'YOUR_CLIENT_ID_HERE') {
+                alert('Please set up your Azure AD app first. See the setup guide.');
+                return;
+            }
+            
+            // Check if we have a valid token
+            if (tokens[person].accessToken && tokens[person].tokenExpiry && Date.now() < parseInt(tokens[person].tokenExpiry)) {
+                loadCalendarEvents(person);
+                return;
+            }
+            
+            // Store which person is authenticating in Supabase
+            await sbFetch('sync_data?name=eq.auth_person', {
+                method: 'PATCH',
+                body: JSON.stringify({ value: JSON.stringify(person) })
+            }).catch(() =>
+                sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: 'auth_person', value: JSON.stringify(person) })
+                })
+            );
+            
+            // OAuth2 implicit flow
+            const scope = 'https://graph.microsoft.com/Calendars.Read';
+            const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+                `client_id=${clientId}&` +
+                `response_type=token&` +
+                `redirect_uri=${encodeURIComponent(msalConfig.auth.redirectUri)}&` +
+                `scope=${encodeURIComponent(scope)}&` +
+                `response_mode=fragment`;
+            
+            window.location.href = authUrl;
+        }
+
+        // Handle OAuth redirect
+        async function handleAuthRedirect() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            
+            if (params.has('access_token')) {
+                // Retrieve which person was authenticating (stored in Supabase)
+                let person = 'drew';
+                try {
+                    const rows = await sbFetch('sync_data?name=eq.auth_person&select=value');
+                    if (rows && rows.length > 0) person = rows[0].value.replace(/"/g, '');
+                } catch(e) {}
+
+                const accessToken = params.get('access_token');
+                const expiresIn = parseInt(params.get('expires_in')) * 1000;
+                const tokenExpiry = Date.now() + expiresIn;
+                
+                tokens[person].accessToken = accessToken;
+                tokens[person].tokenExpiry = tokenExpiry;
+                await saveTokens(person);
+                
+                // Clean up
+                await sbFetch('sync_data?name=eq.auth_person', { method: 'DELETE' }).catch(() => {});
+                window.location.hash = '';
+                
+                // Update UI
+                const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
+                document.getElementById(buttonId).textContent = '✅ Connected';
+                document.getElementById(buttonId).classList.add('connected');
+                
+                loadCalendarEvents(person);
+            }
+        }
+
+        // Load calendar events from Microsoft Graph
+        async function loadCalendarEvents(person) {
+            const accessToken = tokens[person].accessToken;
+            if (!accessToken) return;
+            
+            try {
+                const now = new Date();
+                const endDate = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)); // Next 7 days
+                
+                const url = `https://graph.microsoft.com/v1.0/me/calendarview?` +
+                    `startDateTime=${now.toISOString()}&` +
+                    `endDateTime=${endDate.toISOString()}&` +
+                    `$select=subject,start,end,location&` +
+                    `$orderby=start/dateTime&` +
+                    `$top=50`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'outlook.timezone="America/St_Johns"'
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Token expired — clear from Supabase
+                        tokens[person].accessToken = null;
+                        tokens[person].tokenExpiry = null;
+                        await saveTokens(person);
+                        const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
+                        document.getElementById(buttonId).textContent = '🔐 Reconnect';
+                        document.getElementById(buttonId).classList.remove('connected');
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayCalendarEvents(person, data.value);
+                
+                // Update auth button
+                const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
+                document.getElementById(buttonId).textContent = '✅ Connected';
+                document.getElementById(buttonId).classList.add('connected');
+                
+            } catch (error) {
+                console.error(`Calendar error for ${person}:`, error);
+                document.getElementById(`calendar${person.charAt(0).toUpperCase() + person.slice(1)}Daily`).innerHTML = `
+                    <div class="error">Unable to load calendar events</div>
+                `;
+            }
+        }
+
+        // Display calendar events in different views
+        function displayCalendarEvents(person, events) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // DAILY VIEW - Today's events only
+            const todayEvents = events.filter(event => {
+                const eventDate = new Date(event.start.dateTime);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate.getTime() === today.getTime();
+            });
+            
+            let dailyHTML = '';
+            if (todayEvents.length === 0) {
+                dailyHTML = '<div style="padding: 15px; text-align: center; color: #666; font-size: 0.85rem;">No events today</div>';
+            } else {
+                todayEvents.forEach(event => {
+                    const startTime = new Date(event.start.dateTime);
+                    const endTime = new Date(event.end.dateTime);
+                    const timeString = startTime.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit', 
+                        hour12: true 
+                    });
+                    const endTimeString = endTime.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit', 
+                        hour12: true 
+                    });
+                    
+                    dailyHTML += `
+                        <div class="calendar-event">
+                            <div class="event-time">${timeString} - ${endTimeString}</div>
+                            <div>${event.subject}</div>
+                            ${event.location ? `<div style="font-size: 0.75rem; color: #666;">📍 ${event.location.displayName}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            // WEEKLY VIEW - Next 7 days grouped by day with more info
+            const weekEnd = new Date(today);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            
+            const weekEvents = events.filter(event => {
+                const eventDate = new Date(event.start.dateTime);
+                return eventDate >= today && eventDate < weekEnd;
+            });
+            
+            // Group by day
+            const eventsByDay = {};
+            weekEvents.forEach(event => {
+                const eventDate = new Date(event.start.dateTime);
+                eventDate.setHours(0, 0, 0, 0);
+                const dateKey = eventDate.toDateString();
+                if (!eventsByDay[dateKey]) {
+                    eventsByDay[dateKey] = [];
+                }
+                eventsByDay[dateKey].push(event);
+            });
+            
+            let weeklyHTML = '';
+            let hasAnyEvents = false;
+            
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(today);
+                day.setDate(day.getDate() + i);
+                const dateKey = day.toDateString();
+                const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : day.toLocaleDateString('en-US', { weekday: 'long' });
+                const dateStr = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                const dayEvents = eventsByDay[dateKey] || [];
+                
+                if (dayEvents.length > 0) {
+                    hasAnyEvents = true;
+                    weeklyHTML += `
+                        <div style="font-weight: 600; color: #667eea; margin-top: ${i > 0 ? '10px' : '0'}; margin-bottom: 5px; font-size: 0.85rem; border-bottom: 1px solid #e9ecef; padding-bottom: 3px;">
+                            ${dayName} (${dateStr}) - ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}
+                        </div>
+                    `;
+                    
+                    dayEvents.forEach(event => {
+                        const startTime = new Date(event.start.dateTime);
+                        const timeString = startTime.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit', 
+                            hour12: true 
+                        });
+                        
+                        weeklyHTML += `
+                            <div class="calendar-event" style="margin-left: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 0.85rem;">${event.subject}</div>
+                                        <div class="event-time" style="font-size: 0.75rem;">${timeString}</div>
+                                    </div>
+                                </div>
+                                ${event.location ? `<div style="font-size: 0.7rem; color: #666; margin-top: 2px;">📍 ${event.location.displayName}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    // Show days without events too
+                    weeklyHTML += `
+                        <div style="font-weight: 600; color: #999; margin-top: ${i > 0 ? '10px' : '0'}; margin-bottom: 5px; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px;">
+                            ${dayName} (${dateStr})
+                        </div>
+                        <div style="padding: 8px; margin-left: 8px; color: #999; font-size: 0.8rem; font-style: italic;">No events</div>
+                    `;
+                }
+            }
+            
+            if (!hasAnyEvents) {
+                weeklyHTML = '<div style="padding: 15px; text-align: center; color: #666; font-size: 0.85rem;">No events this week</div>';
+            }
+            
+            // Update views for the specific person
+            const personCap = person.charAt(0).toUpperCase() + person.slice(1);
+            document.getElementById(`calendar${personCap}Daily`).innerHTML = dailyHTML;
+            document.getElementById(`calendar${personCap}Weekly`).innerHTML = weeklyHTML;
+        }
+
+        // Calendar view switching
+        function switchCalendarView(person, view) {
+            const personCap = person.charAt(0).toUpperCase() + person.slice(1);
+            const dailyView = document.getElementById(`calendar${personCap}Daily`);
+            const weeklyView = document.getElementById(`calendar${personCap}Weekly`);
+            
+            if (view === 'daily') {
+                dailyView.style.display = 'block';
+                weeklyView.style.display = 'none';
+            } else {
+                dailyView.style.display = 'none';
+                weeklyView.style.display = 'block';
+            }
+        }
+
+        // To-Do List Functions
+        function addTodo(person) {
+            const inputId = person === 'drew' ? 'todoInputDrew' : 'todoInputNancy';
+            const input = document.getElementById(inputId);
+            const text = input.value.trim();
+            
+            if (text) {
+                todos[person].push({ text, completed: false, id: Date.now() });
+                saveTodos(person);
+                renderTodos(person);
+                input.value = '';
+            }
+        }
+
+        function toggleTodo(person, id) {
+            const todo = todos[person].find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos(person);
+                renderTodos(person);
+            }
+        }
+
+        function deleteTodo(person, id) {
+            todos[person] = todos[person].filter(t => t.id !== id);
+            saveTodos(person);
+            renderTodos(person);
+        }
+
+        function renderTodos(person) {
+            const listId = person === 'drew' ? 'todoListDrew' : 'todoListNancy';
+            const list = document.getElementById(listId);
+            
+            list.innerHTML = todos[person].map(todo => `
+                <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                    <input type="checkbox" class="todo-checkbox" 
+                           ${todo.completed ? 'checked' : ''} 
+                           onchange="toggleTodo('${person}', ${todo.id})">
+                    <span class="todo-text">${todo.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo('${person}', ${todo.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function saveTodos(person) {
+            // Upsert the entire list for this person as a single JSON blob
+            await sbFetch(`sync_data?name=eq.todos_${person}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ value: JSON.stringify(todos[person]) })
+            }).catch(() =>
+                sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: `todos_${person}`, value: JSON.stringify(todos[person]) })
+                })
+            );
+        }
+
+        async function loadTodos(person) {
+            try {
+                const rows = await sbFetch(`sync_data?name=eq.todos_${person}&select=value`);
+                if (rows && rows.length > 0) {
+                    todos[person] = JSON.parse(rows[0].value);
+                    renderTodos(person);
+                }
+            } catch(e) { console.warn('loadTodos error', e); }
+        }
+
+        // Shopping List Functions
+        function addShoppingItem() {
+            const input = document.getElementById('shoppingInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                shoppingItems.push({ text, checked: false, id: Date.now() });
+                saveShoppingList();
+                renderShoppingList();
+                input.value = '';
+            }
+        }
+
+        function toggleShoppingItem(id) {
+            const item = shoppingItems.find(i => i.id === id);
+            if (item) {
+                item.checked = !item.checked;
+                saveShoppingList();
+                renderShoppingList();
+            }
+        }
+
+        function deleteShoppingItem(id) {
+            shoppingItems = shoppingItems.filter(i => i.id !== id);
+            saveShoppingList();
+            renderShoppingList();
+        }
+
+        function renderShoppingList() {
+            const list = document.getElementById('shoppingList');
+            
+            list.innerHTML = shoppingItems.map(item => `
+                <div class="todo-item ${item.checked ? 'completed' : ''}">
+                    <input type="checkbox" class="todo-checkbox" 
+                           ${item.checked ? 'checked' : ''} 
+                           onchange="toggleShoppingItem(${item.id})">
+                    <span class="todo-text">${item.text}</span>
+                    <button class="delete-btn" onclick="deleteShoppingItem(${item.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function saveShoppingList() {
+            await sbFetch('sync_data?name=eq.shopping', {
+                method: 'PATCH',
+                body: JSON.stringify({ value: JSON.stringify(shoppingItems) })
+            }).catch(() =>
+                sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: 'shopping', value: JSON.stringify(shoppingItems) })
+                })
+            );
+        }
+
+        async function loadShoppingList() {
+            try {
+                const rows = await sbFetch('sync_data?name=eq.shopping&select=value');
+                if (rows && rows.length > 0) {
+                    shoppingItems = JSON.parse(rows[0].value);
+                    renderShoppingList();
+                }
+            } catch(e) { console.warn('loadShoppingList error', e); }
+        }
+
+        async function saveNotes() {
+            await sbFetch('sync_data?name=eq.notes', {
+                method: 'PATCH',
+                body: JSON.stringify({ value: JSON.stringify(notes) })
+            }).catch(() =>
+                sbFetch('sync_data', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: 'notes', value: JSON.stringify(notes) })
+                })
+            );
+        }
+
+        async function loadNotes() {
+            try {
+                const rows = await sbFetch('sync_data?name=eq.notes&select=value');
+                if (rows && rows.length > 0) {
+                    notes = JSON.parse(rows[0].value);
+                    renderNotes();
+                }
+            } catch(e) { console.warn('loadNotes error', e); }
+        }
+
+        function addNote() {
+            const input = document.getElementById('notesInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                notes.push({ text, id: Date.now() });
+                saveNotes();
+                renderNotes();
+                input.value = '';
+            }
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            saveNotes();
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+            
+            list.innerHTML = notes.map(note => `
+                <div class="todo-item">
+                    <span class="todo-text">${note.text}</span>
+                    <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Quick Notes Functions
+
+        // Enter key support
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('todoInputDrew').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTodo('drew');
+            });
+            document.getElementById('todoInputNancy').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTodo('nancy');
+            });
+            document.getElementById('shoppingInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addShoppingItem();
+            });
+            document.getElementById('notesInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addNote();
+            });
+        });
+
+        // Initialize — load everything from Supabase, then start live feeds
+        async function init() {
+            // Check for Outlook OAuth redirect first (runs before any await)
+            await handleAuthRedirect();
+
+            // Load synced data from Supabase
+            await Promise.all([
+                loadTodos('drew'),
+                loadTodos('nancy'),
+                loadShoppingList(),
+                loadNotes()
+            ]);
+
+            // Load Outlook tokens and start calendar if valid
+            for (const person of ['drew', 'nancy']) {
+                await loadTokens(person);
+                const t = tokens[person];
+                if (t && t.accessToken && t.tokenExpiry && Date.now() < parseInt(t.tokenExpiry)) {
+                    const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
+                    document.getElementById(buttonId).textContent = '✅ Connected';
+                    document.getElementById(buttonId).classList.add('connected');
+                    loadCalendarEvents(person);
+                    setInterval(() => loadCalendarEvents(person), 300000);
+                }
+            }
+
+            // Realtime sync — reload lists when another device makes a change
+            subscribeRealtime('sync_data', async (event, payload) => {
+                const name = payload?.record?.name || payload?.old_record?.name;
+                if (!name) return;
+                if (name === 'todos_drew')  { await loadTodos('drew'); }
+                if (name === 'todos_nancy') { await loadTodos('nancy'); }
+                if (name === 'shopping')    { await loadShoppingList(); }
+                if (name === 'notes')       { await loadNotes(); }
+            });
+
+            // Start live data feeds
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            updateWeather();
+            setInterval(updateWeather, 600000);
+
+            updateStocks();
+            setInterval(updateStocks, 300000);
+
+            updateNews();
+            setInterval(updateNews, 1800000);
+
+            updateFuelPrices();
+            setInterval(updateFuelPrices, 3600000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
