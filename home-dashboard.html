@@ -822,8 +822,8 @@
         // Replace these two values with your own from supabase.com:
         //   Project Settings → API → Project URL & anon public key
         // ============================================================
-        const SUPABASE_URL = 'https://rnvpsrmhcvnmminrrajh.supabase.co;
-        const SUPABASE_KEY = 'sb_publishable_5nns2Wi3tFuDN-K-T0F5hw_u5Sd0oaP';
+        const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+        const SUPABASE_KEY = 'YOUR_ANON_PUBLIC_KEY';
 
         async function sbFetch(path, options = {}) {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -1929,57 +1929,78 @@
             });
         });
 
-        // Initialize — load everything from Supabase, then start live feeds
+        // ---- Live feeds start immediately, independent of Supabase ----
+        updateTime();
+        setInterval(updateTime, 1000);
+        updateWeather();
+        setInterval(updateWeather, 600000);
+        updateStocks();
+        setInterval(updateStocks, 300000);
+        updateNews();
+        setInterval(updateNews, 1800000);
+        updateFuelPrices();
+        setInterval(updateFuelPrices, 3600000);
+
+        // ---- Supabase init — runs separately so any failure is isolated ----
         async function init() {
-            // Check for Outlook OAuth redirect first (runs before any await)
-            await handleAuthRedirect();
-
-            // Load synced data from Supabase
-            await Promise.all([
-                loadTodos('drew'),
-                loadTodos('nancy'),
-                loadShoppingList(),
-                loadNotes()
-            ]);
-
-            // Load Outlook tokens and start calendar if valid
-            for (const person of ['drew', 'nancy']) {
-                await loadTokens(person);
-                const t = tokens[person];
-                if (t && t.accessToken && t.tokenExpiry && Date.now() < parseInt(t.tokenExpiry)) {
-                    const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
-                    document.getElementById(buttonId).textContent = '✅ Connected';
-                    document.getElementById(buttonId).classList.add('connected');
-                    loadCalendarEvents(person);
-                    setInterval(() => loadCalendarEvents(person), 300000);
-                }
+            // Validate credentials before doing anything
+            if (SUPABASE_URL.includes('YOUR_PROJECT_ID') || SUPABASE_KEY.includes('YOUR_ANON_PUBLIC_KEY')) {
+                console.warn('Supabase credentials not configured — sync disabled. Lists will not save.');
+                renderTodos('drew');
+                renderTodos('nancy');
+                renderShoppingList();
+                renderNotes();
+                return;
             }
 
+            try {
+                // Check for Outlook OAuth redirect
+                await handleAuthRedirect();
+            } catch(e) { console.warn('Auth redirect error:', e); }
+
+            // Load synced data from Supabase
+            try {
+                await Promise.all([
+                    loadTodos('drew'),
+                    loadTodos('nancy'),
+                    loadShoppingList(),
+                    loadNotes()
+                ]);
+            } catch(e) {
+                console.error('Supabase load error — is the sync_data table created? Error:', e);
+                // Render empty lists so UI is usable
+                renderTodos('drew');
+                renderTodos('nancy');
+                renderShoppingList();
+                renderNotes();
+            }
+
+            // Load Outlook tokens and start calendar if valid
+            try {
+                for (const person of ['drew', 'nancy']) {
+                    await loadTokens(person);
+                    const t = tokens[person];
+                    if (t && t.accessToken && t.tokenExpiry && Date.now() < parseInt(t.tokenExpiry)) {
+                        const buttonId = `authButton${person.charAt(0).toUpperCase() + person.slice(1)}`;
+                        document.getElementById(buttonId).textContent = '✅ Connected';
+                        document.getElementById(buttonId).classList.add('connected');
+                        loadCalendarEvents(person);
+                        setInterval(() => loadCalendarEvents(person), 300000);
+                    }
+                }
+            } catch(e) { console.warn('Token load error:', e); }
+
             // Realtime sync — reload lists when another device makes a change
-            subscribeRealtime('sync_data', async (event, payload) => {
-                const name = payload?.record?.name || payload?.old_record?.name;
-                if (!name) return;
-                if (name === 'todos_drew')  { await loadTodos('drew'); }
-                if (name === 'todos_nancy') { await loadTodos('nancy'); }
-                if (name === 'shopping')    { await loadShoppingList(); }
-                if (name === 'notes')       { await loadNotes(); }
-            });
-
-            // Start live data feeds
-            updateTime();
-            setInterval(updateTime, 1000);
-
-            updateWeather();
-            setInterval(updateWeather, 600000);
-
-            updateStocks();
-            setInterval(updateStocks, 300000);
-
-            updateNews();
-            setInterval(updateNews, 1800000);
-
-            updateFuelPrices();
-            setInterval(updateFuelPrices, 3600000);
+            try {
+                subscribeRealtime('sync_data', async (event, payload) => {
+                    const name = payload?.record?.name || payload?.old_record?.name;
+                    if (!name) return;
+                    if (name === 'todos_drew')  { await loadTodos('drew'); }
+                    if (name === 'todos_nancy') { await loadTodos('nancy'); }
+                    if (name === 'shopping')    { await loadShoppingList(); }
+                    if (name === 'notes')       { await loadNotes(); }
+                });
+            } catch(e) { console.warn('Realtime setup error:', e); }
         }
 
         init();
